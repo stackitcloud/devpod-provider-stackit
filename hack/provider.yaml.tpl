@@ -94,8 +94,17 @@ options:
     password: false
     suggestions:
     - eu01
-    - eu02
-    default: ""
+    default: "eu01"
+  STACKIT_AVAILABILITY_ZONE:
+      description: "The STACKIT availability zone to create the VM in. e.g. eu01"
+      required: true
+      password: false
+      suggestions:
+      - eu01-1
+      - eu01-2
+      - eu01-3
+      - eu01-M
+      default: "eu01-1"
   STACKIT_PRIVATE_KEY_PATH:
     description: "The location of the custom private key file"
     required: false

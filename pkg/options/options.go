@@ -9,10 +9,11 @@ type Options struct {
 	MachineID     string
 	MachineFolder string
 
-	ClientOptions *ClientOptions
-	ProjectID     string
-	Flavor        string
-	DiskSize      string
+	ClientOptions    *ClientOptions
+	ProjectID        string
+	AvailabilityZone string
+	Flavor           string
+	DiskSize         string
 }
 
 type ClientOptions struct {
@@ -43,6 +44,10 @@ func FromEnv(skipMachine bool) (*Options, error) {
 		return nil, err
 	}
 	retOptions.Flavor, err = fromEnvOrError("STACKIT_FLAVOR")
+	if err != nil {
+		return nil, err
+	}
+	retOptions.AvailabilityZone, err = fromEnvOrError("STACKIT_AVAILABILITY_ZONE")
 	if err != nil {
 		return nil, err
 	}

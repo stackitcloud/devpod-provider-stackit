@@ -144,7 +144,7 @@ func (s *Stackit) Create(ctx context.Context, options *options.Options, publicKe
 
 	createServerPayload := iaas.CreateServerPayload{
 		Name:             &options.MachineID,
-		AvailabilityZone: &options.ClientOptions.Region,
+		AvailabilityZone: &options.AvailabilityZone,
 		MachineType:      &options.Flavor,
 		BootVolume: &iaas.CreateServerPayloadBootVolume{
 			DeleteOnTermination: utils.Ptr(true),
