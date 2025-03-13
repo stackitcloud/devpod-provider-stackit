@@ -18,6 +18,7 @@ optionGroups:
     - STACKIT_REGION
     - STACKIT_PRIVATE_KEY_PATH
     - STACKIT_SERVICE_ACCOUNT_KEY_PATH
+    - STACKIT_AVAILABILITY_ZONE
     name: "STACKIT options"
     defaultVisible: true
 options:
