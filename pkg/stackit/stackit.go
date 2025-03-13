@@ -118,29 +118,44 @@ func (s *Stackit) Delete(ctx context.Context, projectId, machineName string) err
 
 	gotError := false
 
-	if len(*server.Nics) == 0 {
+	err = s.client.DeleteServer(ctx, projectId, *server.Id).Execute()
+	if err != nil {
+		log.Default.Errorf("failed to delete server")
+	}
+	_, err = wait.DeleteServerWaitHandler(ctx, s.client, projectId, *server.Id).WaitWithContext(ctx)
+	if err != nil {
+		log.Default.Errorf("error while waiting for server deletion")
+	}
+
+	nics := *server.Nics
+	if len(nics) == 0 {
 		log.Default.Errorf("no networks found for server")
 		gotError = true
 	} else {
-		nics := *server.Nics
+		publicIPAddress := nics[0].PublicIp
+		if publicIPAddress != nil {
+			publicIP, err := s.getPublicIPByIPAddress(ctx, projectId, *publicIPAddress)
+			if err != nil {
+				log.Default.Errorf("failed to get public IP")
+				gotError = true
+			}
+
+			err = s.client.DeletePublicIP(ctx, projectId, *publicIP.Id).Execute()
+			if err != nil {
+				log.Default.Errorf("failed to delete public IP")
+				gotError = true
+			}
+		}
+
 		networkId := nics[0].NetworkId
 		err = s.client.DeleteNetwork(ctx, projectId, *networkId).Execute()
 		if err != nil {
 			log.Default.Errorf("failed to delete network")
 			gotError = true
 		}
-
-		publicIPAddress := nics[0].PublicIp
-		publicIP, err := s.getPublicIPByIPAddress(ctx, projectId, *publicIPAddress)
+		_, err = wait.DeleteNetworkWaitHandler(ctx, s.client, projectId, *networkId).WaitWithContext(ctx)
 		if err != nil {
-			log.Default.Errorf("failed to get public IP")
-			gotError = true
-		}
-
-		err = s.client.DeletePublicIP(ctx, projectId, *publicIP.Id).Execute()
-		if err != nil {
-			log.Default.Errorf("failed to delete public IP")
-			gotError = true
+			log.Default.Errorf("error while waiting for network deletion")
 		}
 
 		for _, id := range *nics[0].SecurityGroups {
