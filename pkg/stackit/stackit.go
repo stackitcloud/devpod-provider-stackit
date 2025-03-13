@@ -23,8 +23,9 @@ import (
 var cloudConfigFS embed.FS
 
 const (
-	SSHUserName = "devpod"
-	SSHPort     = "22"
+	SSHUserName   = "devpod"
+	SSHPort       = "22"
+	ubuntuImageID = "117e8764-41c2-405f-aece-b53aa08b28cc"
 )
 
 type Stackit struct {
@@ -128,32 +129,28 @@ func statusFromPowerStateString(state string) client.Status {
 	return client.StatusNotFound
 }
 
-func (s *Stackit) Create(ctx context.Context, projectID, machineId string, publicKey []byte) error {
-	availabilityZone := "eu01-1"
-	machineType := "g1.1"
-	imageID := "117e8764-41c2-405f-aece-b53aa08b28cc"
-	username := "devpod"
+func (s *Stackit) Create(ctx context.Context, options *options.Options, publicKey []byte) error {
 	sshPublicKey := string(publicKey)
 
-	network, err := s.createNetwork(ctx, projectID, machineId)
+	network, err := s.createNetwork(ctx, options.ProjectID, options.MachineID)
 	if err != nil {
 		return err
 	}
 
-	userdata, err := generateUserData(username, sshPublicKey)
+	userdata, err := generateUserData(sshPublicKey)
 	if err != nil {
 		return err
 	}
 
 	createServerPayload := iaas.CreateServerPayload{
-		Name:             &machineId,
-		AvailabilityZone: &availabilityZone,
-		MachineType:      &machineType,
+		Name:             &options.MachineID,
+		AvailabilityZone: &options.ClientOptions.Region,
+		MachineType:      &options.Flavor,
 		BootVolume: &iaas.CreateServerPayloadBootVolume{
 			DeleteOnTermination: utils.Ptr(true),
 			Size:                utils.Ptr(int64(64)),
 			Source: &iaas.BootVolumeSource{
-				Id:   &imageID,
+				Id:   utils.Ptr(ubuntuImageID),
 				Type: utils.Ptr("image"),
 			},
 		},
@@ -165,31 +162,31 @@ func (s *Stackit) Create(ctx context.Context, projectID, machineId string, publi
 		UserData: &userdata,
 	}
 
-	server, err := s.client.CreateServer(ctx, projectID).CreateServerPayload(createServerPayload).Execute()
+	server, err := s.client.CreateServer(ctx, options.ProjectID).CreateServerPayload(createServerPayload).Execute()
 	if err != nil {
 		return err
 	}
 
-	server, err = wait.CreateServerWaitHandler(ctx, s.client, projectID, *server.Id).WaitWithContext(ctx)
+	server, err = wait.CreateServerWaitHandler(ctx, s.client, options.ProjectID, *server.Id).WaitWithContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	publicIP, err := s.client.CreatePublicIP(ctx, projectID).CreatePublicIPPayload(iaas.CreatePublicIPPayload{}).Execute()
+	publicIP, err := s.client.CreatePublicIP(ctx, options.ProjectID).CreatePublicIPPayload(iaas.CreatePublicIPPayload{}).Execute()
 	if err != nil {
 		return err
 	}
 
-	err = s.client.AddPublicIpToServer(ctx, projectID, *server.Id, *publicIP.Id).Execute()
+	err = s.client.AddPublicIpToServer(ctx, options.ProjectID, *server.Id, *publicIP.Id).Execute()
 	if err != nil {
 		return err
 	}
 
 	createSecurityGroupPayload := iaas.CreateSecurityGroupPayload{
-		Name: utils.Ptr(machineId),
+		Name: &options.MachineID,
 	}
 
-	securityGroup, err := s.client.CreateSecurityGroup(ctx, projectID).CreateSecurityGroupPayload(createSecurityGroupPayload).Execute()
+	securityGroup, err := s.client.CreateSecurityGroup(ctx, options.ProjectID).CreateSecurityGroupPayload(createSecurityGroupPayload).Execute()
 	if err != nil {
 		return err
 	}
@@ -206,14 +203,14 @@ func (s *Stackit) Create(ctx context.Context, projectID, machineId string, publi
 		},
 	}
 
-	securityGroupRule, err := s.client.CreateSecurityGroupRule(ctx, projectID, *securityGroup.Id).CreateSecurityGroupRulePayload(createSecurityGroupRulePayload).Execute()
+	securityGroupRule, err := s.client.CreateSecurityGroupRule(ctx, options.ProjectID, *securityGroup.Id).CreateSecurityGroupRulePayload(createSecurityGroupRulePayload).Execute()
 	if err != nil {
 		return err
 	}
 
 	fmt.Println(*securityGroupRule)
 
-	err = s.client.AddSecurityGroupToServer(ctx, projectID, *server.Id, *securityGroup.Id).Execute()
+	err = s.client.AddSecurityGroupToServer(ctx, options.ProjectID, *server.Id, *securityGroup.Id).Execute()
 	if err != nil {
 		return err
 	}
@@ -221,7 +218,7 @@ func (s *Stackit) Create(ctx context.Context, projectID, machineId string, publi
 	return nil
 }
 
-func generateUserData(username string, publicKey string) (string, error) {
+func generateUserData(publicKey string) (string, error) {
 	t, err := template.New("cloud-config.yaml").ParseFS(cloudConfigFS, "cloud-config.yaml")
 	if err != nil {
 		return "", err
@@ -230,7 +227,7 @@ func generateUserData(username string, publicKey string) (string, error) {
 	output := new(bytes.Buffer)
 	if err := t.Execute(output, map[string]string{
 		"PublicKey": publicKey,
-		"Username":  username,
+		"Username":  SSHUserName,
 	}); err != nil {
 		return "", err
 	}

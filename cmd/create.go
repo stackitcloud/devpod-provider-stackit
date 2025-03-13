@@ -35,7 +35,7 @@ var createCmd = &cobra.Command{
 			return fmt.Errorf("can't b64decode public key: %w", err)
 		}
 
-		return s.Create(ctx, options.ProjectID, options.MachineID, publicKey)
+		return s.Create(ctx, options, publicKey)
 	},
 }
 
