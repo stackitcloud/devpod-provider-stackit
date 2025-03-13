@@ -1,16 +1,9 @@
 #cloud-config
-packages:
-  - curl
-  - openssh-server
-  - ufw
 package_reboot_if_required: false
 package_update: false
 runcmd:
   # Secure SSHD
   - [rm, -f, /root/.ssh/authorized_keys]
-  # Secure UFW
-  - ufw allow ssh
-  - ufw enable
   # Install Docker
   - if docker ; then echo "Docker already installed"; else curl -fsSL https://get.docker.com | sh; fi
   - systemctl restart docker
