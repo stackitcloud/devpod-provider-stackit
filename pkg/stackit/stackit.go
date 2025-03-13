@@ -6,6 +6,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"fmt"
+	"github.com/loft-sh/log"
 	"text/template"
 
 	"github.com/stackitcloud/stackit-sdk-go/core/utils"
@@ -110,7 +111,58 @@ func (s *Stackit) Stop(ctx context.Context, projectId, machineName string) error
 }
 
 func (s *Stackit) Delete(ctx context.Context, projectId, machineName string) error {
-	//server, err := s.getServerByName(ctx, projectId, machineName)
+	server, err := s.getServerByName(ctx, projectId, machineName)
+	if err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+
+	gotError := false
+
+	if len(*server.Nics) == 0 {
+		log.Default.Errorf("no networks found for server")
+		gotError = true
+	} else {
+		nics := *server.Nics
+		networkId := nics[0].NetworkId
+		err = s.client.DeleteNetwork(ctx, projectId, *networkId).Execute()
+		if err != nil {
+			log.Default.Errorf("failed to delete network")
+			gotError = true
+		}
+
+		publicIPAddress := nics[0].PublicIp
+		publicIP, err := s.getPublicIPByIPAddress(ctx, projectId, *publicIPAddress)
+		if err != nil {
+			log.Default.Errorf("failed to get public IP")
+			gotError = true
+		}
+
+		err = s.client.DeletePublicIP(ctx, projectId, *publicIP.Id).Execute()
+		if err != nil {
+			log.Default.Errorf("failed to delete public IP")
+			gotError = true
+		}
+
+		for _, id := range *nics[0].SecurityGroups {
+			name, err := s.getSecurityGroupNameByID(ctx, projectId, id)
+			if err != nil {
+				log.Default.Errorf("failed to get name of security group by ID")
+				gotError = true
+			}
+
+			if name != "default" {
+				err = s.client.DeleteSecurityGroup(ctx, projectId, id).Execute()
+				if err != nil {
+					log.Default.Errorf("failed to delete security group %q", name)
+					gotError = true
+				}
+			}
+		}
+	}
+
+	if gotError {
+		return errors.New("failed to delete all components associated to the devpod")
+	}
 
 	return nil
 }
@@ -268,4 +320,32 @@ func (s *Stackit) getServerByName(ctx context.Context, projectId, serverName str
 		}
 	}
 	return nil, errors.New("server not found")
+}
+
+func (s *Stackit) getPublicIPByIPAddress(ctx context.Context, projectId, ipAddress string) (*iaas.PublicIp, error) {
+	publicIPs, err := s.client.ListPublicIPs(ctx, projectId).Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(*publicIPs.Items) == 0 {
+		return nil, errors.New("no public IPs found")
+	}
+
+	for _, publicIP := range *publicIPs.Items {
+		if *publicIP.Ip == ipAddress {
+			return &publicIP, nil
+		}
+	}
+
+	return nil, errors.New("public IP not found")
+}
+
+func (s *Stackit) getSecurityGroupNameByID(ctx context.Context, projectId, securityGroupId string) (string, error) {
+	securityGroup, err := s.client.GetSecurityGroup(ctx, projectId, securityGroupId).Execute()
+	if err != nil {
+		return "", errors.New("security group not found")
+	}
+
+	return *securityGroup.Name, nil
 }
