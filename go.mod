@@ -10,6 +10,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.16.0
 	github.com/stackitcloud/stackit-sdk-go/services/iaas v0.21.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
