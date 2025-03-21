@@ -6,8 +6,9 @@ import (
 	"embed"
 	"encoding/base64"
 	"fmt"
-	"github.com/loft-sh/log"
 	"text/template"
+
+	"github.com/loft-sh/log"
 
 	"github.com/stackitcloud/stackit-sdk-go/core/utils"
 	"github.com/stackitcloud/stackit-sdk-go/services/iaas/wait"
@@ -215,7 +216,7 @@ func (s *Stackit) Create(ctx context.Context, options *options.Options, publicKe
 		MachineType:      &options.Flavor,
 		BootVolume: &iaas.CreateServerPayloadBootVolume{
 			DeleteOnTermination: utils.Ptr(true),
-			Size:                utils.Ptr(int64(64)),
+			Size:                utils.Ptr(options.DiskSize),
 			Source: &iaas.BootVolumeSource{
 				Id:   utils.Ptr(ubuntuImageID),
 				Type: utils.Ptr("image"),
