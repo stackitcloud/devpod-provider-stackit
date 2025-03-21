@@ -3,6 +3,8 @@ package options
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 )
 
 type Options struct {
@@ -13,7 +15,7 @@ type Options struct {
 	ProjectID        string
 	AvailabilityZone string
 	Flavor           string
-	DiskSize         string
+	DiskSize         int64
 }
 
 type ClientOptions struct {
@@ -51,7 +53,11 @@ func FromEnv(skipMachine bool) (*Options, error) {
 	if err != nil {
 		return nil, err
 	}
-	retOptions.DiskSize, err = fromEnvOrError("STACKIT_DISK_SIZE")
+	diskSize, err := fromEnvOrError("STACKIT_DISK_SIZE")
+	if err != nil {
+		return nil, err
+	}
+	retOptions.DiskSize, err = extractInt64(diskSize)
 	if err != nil {
 		return nil, err
 	}
@@ -78,4 +84,19 @@ func fromEnvOrError(name string) (string, error) {
 	}
 
 	return val, nil
+}
+
+func extractInt64(s string) (int64, error) {
+	re := regexp.MustCompile(`\d+`)
+	match := re.FindString(s)
+
+	if match == "" {
+		return 0, fmt.Errorf("couldn't find number in %s", s)
+	}
+
+	result, err := strconv.ParseInt(match, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
 }

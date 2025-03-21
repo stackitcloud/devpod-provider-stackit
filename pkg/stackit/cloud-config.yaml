@@ -18,10 +18,6 @@ users:
     shell: /bin/bash
     ssh_authorized_keys:
       - "{{ .PublicKey }}"
-  - name: test
-    lock_passwd: false
-    passwd: $1$X4rlCkR8$mZuINsPlJmSydnLeIFTl5/
-    sudo: ALL=(ALL) NOPASSWD:ALL
 write_files:
   - path: /etc/docker/daemon.json
     content: |
