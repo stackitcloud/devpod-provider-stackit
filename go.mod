@@ -1,7 +1,6 @@
 module github.com/stackitcloud/devpod-provider-stackit
 
 go 1.24.1
-
 require (
 	github.com/loft-sh/devpod v0.6.15
 	github.com/loft-sh/log v0.0.0-20240219160058-26d83ffb46ac
@@ -9,7 +8,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.16.0
-	github.com/stackitcloud/stackit-sdk-go/services/iaas v0.21.1
+	github.com/stackitcloud/stackit-sdk-go/services/iaas v0.22.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -25,7 +24,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213 // indirect
