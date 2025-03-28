@@ -2,7 +2,7 @@ name: stackit
 version: {{ .Env.VERSION }}
 description: |-
   DevPod on STACKIT
-icon: https://avatars3.githubusercontent.com/stackitcloud
+icon: https://github.com/stackitcloud/devpod-provider-stackit/blob/80d9a236cd309baf50e756480c4c00689f83b001/assets/stackit.png
 optionGroups:
   - options:
       - AGENT_PATH
