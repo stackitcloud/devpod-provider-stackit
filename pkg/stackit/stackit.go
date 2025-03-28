@@ -146,14 +146,10 @@ func (s *Stackit) Delete(ctx context.Context, projectId, machineName string) err
 		}
 
 		networkId := nics[0].NetworkId
-		err = s.client.DeleteNetwork(ctx, projectId, *networkId).Execute()
+		err = s.deleteNetwork(ctx, projectId, *networkId)
 		if err != nil {
 			log.Default.Errorf("failed to delete network")
 			gotError = true
-		}
-		_, err = wait.DeleteNetworkWaitHandler(ctx, s.client, projectId, *networkId).WaitWithContext(ctx)
-		if err != nil {
-			log.Default.Errorf("error while waiting for network deletion")
 		}
 
 		for _, id := range *nics[0].SecurityGroups {
@@ -300,21 +296,6 @@ func generateUserData(publicKey string) (*[]byte, error) {
 	encodedUserData := base64.StdEncoding.EncodeToString(output.Bytes())
 	byteArray := []byte(encodedUserData)
 	return &byteArray, nil
-}
-
-func (s *Stackit) createVolume(ctx context.Context, projectId, volumeName, volumeAvailabilityZone string, volumeSize int64) (string, error) {
-	createVolumePayload := iaas.CreateVolumePayload{
-		Name:             &volumeName,
-		AvailabilityZone: &volumeAvailabilityZone,
-		Size:             &volumeSize,
-	}
-
-	volume, err := s.client.CreateVolume(ctx, projectId).CreateVolumePayload(createVolumePayload).Execute()
-	if err != nil {
-		return "", err
-	}
-
-	return *volume.Id, nil
 }
 
 func (s *Stackit) getServerByName(ctx context.Context, projectId, serverName string) (*iaas.Server, error) {
