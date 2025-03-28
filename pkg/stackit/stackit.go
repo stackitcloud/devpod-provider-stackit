@@ -80,11 +80,8 @@ func (s *Stackit) Status(ctx context.Context, projectId, machineName string) (cl
 	if server == nil {
 		return client.StatusNotFound, nil
 	}
-	if server.GetPowerStatus() == nil {
-		return client.StatusNotFound, nil
-	}
 
-	return statusFromPowerStateString(*server.GetPowerStatus()), nil
+	return statusFromPowerStateString(server.GetPowerStatus()), nil
 }
 
 func (s *Stackit) Start(ctx context.Context, projectId, machineName string) error {
@@ -227,7 +224,7 @@ func (s *Stackit) Create(ctx context.Context, options *options.Options, publicKe
 				NetworkId: network.NetworkId,
 			},
 		},
-		UserData: &userdata,
+		UserData: userdata,
 	}
 
 	server, err := s.client.CreateServer(ctx, options.ProjectID).CreateServerPayload(createServerPayload).Execute()
@@ -286,10 +283,10 @@ func (s *Stackit) Create(ctx context.Context, options *options.Options, publicKe
 	return nil
 }
 
-func generateUserData(publicKey string) (string, error) {
+func generateUserData(publicKey string) (*[]byte, error) {
 	t, err := template.New("cloud-config.yaml").ParseFS(cloudConfigFS, "cloud-config.yaml")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	output := new(bytes.Buffer)
@@ -297,10 +294,12 @@ func generateUserData(publicKey string) (string, error) {
 		"PublicKey": publicKey,
 		"Username":  SSHUserName,
 	}); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return base64.StdEncoding.EncodeToString(output.Bytes()), nil
+	encodedUserData := base64.StdEncoding.EncodeToString(output.Bytes())
+	byteArray := []byte(encodedUserData)
+	return &byteArray, nil
 }
 
 func (s *Stackit) createVolume(ctx context.Context, projectId, volumeName, volumeAvailabilityZone string, volumeSize int64) (string, error) {
