@@ -32,5 +32,13 @@ func (s *Stackit) createNetwork(ctx context.Context, projectId string, networkNa
 }
 
 func (s *Stackit) deleteNetwork(ctx context.Context, projectId string, networkId string) error {
-	return s.client.DeleteNetworkExecute(ctx, projectId, networkId)
+	err := s.client.DeleteNetworkExecute(ctx, projectId, networkId)
+	if err != nil {
+		return err
+	}
+	_, err = wait.DeleteNetworkWaitHandler(ctx, s.client, projectId, networkId).WaitWithContext(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }
