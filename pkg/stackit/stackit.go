@@ -276,6 +276,11 @@ func (s *Stackit) Create(ctx context.Context, options *options.Options, publicKe
 		return err
 	}
 
+	err = s.waitForSSHToBeReady(options, publicIP.GetIp(), SSHUserName, SSHPort)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
