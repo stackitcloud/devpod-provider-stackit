@@ -9,7 +9,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stackitcloud/stackit-sdk-go/core v0.17.2
-	github.com/stackitcloud/stackit-sdk-go/services/iaas v0.26.0
+	github.com/stackitcloud/stackit-sdk-go/services/iaas v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
