@@ -34,5 +34,5 @@ jobs:
       - name: Save release artifacts
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ github.token }}
           files: release/*
