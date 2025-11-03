@@ -8,7 +8,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.10.1
-	github.com/stackitcloud/stackit-sdk-go/core v0.17.3
+	github.com/stackitcloud/stackit-sdk-go/core v0.18.0
 	github.com/stackitcloud/stackit-sdk-go/services/iaas v0.29.2
 	gopkg.in/yaml.v3 v3.0.1
 )
